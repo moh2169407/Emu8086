@@ -1,0 +1,22 @@
+[
+  {
+    "file": "src/instr_queue.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Wcast-align",
+      "-O0",
+      "-Iinclude",
+      "-Isvec",
+      "-fsanitize=address",
+      "-c",
+      "src/instr_queue.c",
+      "-o",
+      "build/instr_queue.o"
+    ],
+    "directory": "/Users/mohamudmohamud/Downloads2/8086",
+    "output": "build/instr_queue.o"
+  }
+]

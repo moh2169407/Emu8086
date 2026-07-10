@@ -2,7 +2,7 @@ COMP := gcc
 SRCDIR = src
 BUILDDIR := build
 INCDIR := include -Isvec
-TARGET := $(BUILDDIR)/bin/unnamed
+TARGET := $(BUILDDIR)/bin/8086
 
 COMPFLAGS := -g -Wall -Wextra -Wcast-align -O0 -I$(INCDIR) -fsanitize=address 
 
