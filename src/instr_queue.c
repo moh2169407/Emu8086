@@ -22,7 +22,7 @@ static Node* priv_init_node(uint16_t data);
 
 InstrQueue* iqueue_init(void) {
     InstrQueue* iqueue = xmalloc(sizeof(*iqueue));
-    memset(iqueue, 1, sizeof(*iqueue));
+    memset(iqueue, 0, sizeof(*iqueue));
 
     return iqueue;
 }
