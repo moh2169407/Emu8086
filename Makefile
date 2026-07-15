@@ -1,23 +1,101 @@
-COMP := gcc
+# The goal for this makefile is build portable executable file and build and run tests
+DEBUG = TRUE
+# Check windows?
+ifeq ($(OS), Windows_NT)
+	DETECTED_OS := Windows		
+	$(error "Haven't implemented windows support yet")
+else # UNIX like system
+	UNAME_S = $(shell uname -s)
+	ifeq ($(UNAME_S), Darwin)
+		DETECTED_OS := MAC
+	endif
+ 	ifeq ($(UNAME_S), Linux)
+		DETECTED_OS := Linux
+	endif
+endif
+ifneq  ($(shell command -v gcc),)
+	CC  = gcc
+else 
+	CC = cc
+endif
+BUILDDIR = build
+BINDIR = $(BUILDDIR)/bin
+TARGET = $(BINDIR)/8086
 SRCDIR = src
-BUILDDIR := build
-INCDIR := include -Isvec
-TARGET := $(BUILDDIR)/bin/8086
-
-COMPFLAGS := -g -Wall -Wextra -Wcast-align -O0 -I$(INCDIR) -fsanitize=address 
-
-SRC := $(wildcard $(SRCDIR)/*.c)
-OBJS := $(SRC:src/%.c=build/%.o)
-
+SRC = $(wildcard $(SRCDIR)/*.c)
+OBJ = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
+INCDIR = -Iinclude -Isvec
+TESTDIR = test
+TESTBIN = $(BUILDDIR)/$(TESTDIR)
+TESTOBJ = $(wildcard $(TESTDIR)/*.c)
+TESTS = $(TESTOBJ:$(TESTDIR)/%.c=$(TESTBIN)/%)
+CFLAGS = $(INCDIR)
+DEPS = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.k)
+# Excluding main object to link lib 
+LIBOBJ := $(shell echo $(OBJ) | tr " " "\n"| grep -v "main")
+LIBTARGET = $(BINDIR)/lib8086.a
+ifeq ($(DEBUG), TRUE)
+	CFLAGS += -g -Wall -Wextra
+	CFLAGS += -Werror -Wpedantic
+	ifeq ($(shell echo | $(CC) -E -dM - | grep -c "__clang__"),0)
+		CFLAGS += -fanalyzer
+	endif
+else 
+	CFLAGS += -DNDEBUG -O2
+endif
+.PHONY: all test test-%
+SHELL = /bin/sh
+ 
 all: $(TARGET)
+	@echo "Build complete: $(TARGET)"
 
-$(TARGET): $(OBJS)
-	$(COMP) $(COMPFLAGS) $(OBJS) -o $(TARGET)
+$(BUILDDIR):
+	@echo "Creating build directory..."
+	mkdir -p build
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c
+$(BINDIR): | $(BUILDDIR)
+	@echo "Creating bin directory..."
+	mkdir -p build/bin
 
-	mkdir -p $(BUILDDIR)
-	$(COMP) $(COMPFLAGS) -c $< -o $@
+$(TESTBIN):
+	@echo "Creating test directory..."
+	mkdir -p build/test
+
+$(TARGET): $(OBJ) 
+	@echo "Linking $@..."
+	$(CC) $(CFLAGS) $(OBJ) -o $@
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BINDIR)
+	@echo "Compiling $<..."
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@ 
+
+$(TESTBIN)/%: $(TESTDIR)/%.c $(LIBTARGET) | $(TESTBIN)
+	@echo "Compiling and linking test: $@..."
+	$(CC) $(CFLAGS) -L$(BINDIR) $< -l8086 -o $@
+
+$(LIBTARGET): $(OBJ)
+	@echo "Archiving $@..."
+	@ar -ruv $(LIBTARGET) $(OBJ)
+	
+-include $(DEPS)
+
+test: $(TESTS)  
+	@echo "Running all tests: $(TESTS)"
+	@for TEST in $(TESTS); do \
+		echo "--- $$TEST ---"; \
+		./$$TEST; \
+	done 
+
+test-%: $(TESTBIN)/%
+	@echo "Running test: $*..."
+	./$(TESTBIN)/$*
 
 clean:
-	rm -f build/*.o build/bin/$(TARGET)
+	@echo "Cleaning object and dependency files..."
+	rm -f $(BUILDDIR)/*.o
+	rm -f $(BUILDDIR)/*.d
+	rm -rf $(TESTBIN)
+
+cleanclean: 
+	@echo "Removing entire build directory..."
+	rm -rf $(BUILDDIR)
