@@ -18,6 +18,8 @@ BitSet* bitset_init_bset(uint8_t bytesSize) {
         bytesSize = 1;
     }
     bSet->set = xmalloc(sizeof(*bSet->set) * bytesSize);
+    memset(bSet->set, 0, sizeof(*bSet->set) * bytesSize);
+
     bSet->capacity = ((sizeof(*bSet->set) * bytesSize) * 8 ) - 1;
 
     return bSet;
@@ -51,7 +53,7 @@ int16_t bitset_get_size_bits(BitSet* bSet) {
     return resulted;
 }
 
-void bitset_set_bit(BitSet* bSet, uint32_t pos) {
+void bitset_set_bit_pos(BitSet* bSet, uint32_t pos) {
     assert(bSet != NULL);
     if (pos > bSet->capacity) {
         return; 

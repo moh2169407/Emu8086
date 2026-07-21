@@ -103,8 +103,8 @@ int test_setting_first_and_last_bit(void) {
     int result;
     BitSet* set = bitset_init_bset(1);
 
-    bitset_set_bit(set, 7);
-    bitset_set_bit(set, 0);
+    bitset_set_bit_pos(set, 7);
+    bitset_set_bit_pos(set, 0);
 
     result = bitset_get_size_bits(set);
 
@@ -124,10 +124,10 @@ int test_setting_bits_and_check_int_val(void) {
     int result;
     BitSet* set = bitset_init_bset(1);
 
-    bitset_set_bit(set, 0);
-    bitset_set_bit(set, 2);
-    bitset_set_bit(set, 4);
-    bitset_set_bit(set, 6);
+    bitset_set_bit_pos(set, 0);
+    bitset_set_bit_pos(set, 2);
+    bitset_set_bit_pos(set, 4);
+    bitset_set_bit_pos(set, 6);
 
     uint8_t size;
     uint8_t* arr = bitset_to_int_array(set, &size);
@@ -151,9 +151,9 @@ int test_bitset_to_int_array(void) {
     int result;
     BitSet* set = bitset_init_bset(3);
 
-    bitset_set_bit(set, 7);
-    bitset_set_bit(set, 15);
-    bitset_set_bit(set, 23);
+    bitset_set_bit_pos(set, 7);
+    bitset_set_bit_pos(set, 15);
+    bitset_set_bit_pos(set, 23);
 
     
     uint8_t size;
