@@ -42,8 +42,9 @@ LIBOBJ := $(shell echo $(OBJ) | tr " " "\n"| grep -v "main")
 LIBTARGET = $(BINDIR)/lib8086.a
 
 ifeq ($(DEBUG), TRUE)
-	CFLAGS += -g -Wall -Wextra
-	CFLAGS += -Werror -Wpedantic
+	CFLAGS += -g -Wall -Wextra 
+	CFLAGS += -fsanitize=address
+	CFLAGS += -Werror -Wpedantic 
 	ifeq ($(shell echo | $(CC) -E -dM - | grep -c "__clang__"),0)
 	CFLAGS += -fanalyzer
 endif
@@ -51,7 +52,7 @@ else
 	CFLAGS += -DNDEBUG -O2
 endif
 
-.PHONY: all test test-%
+.PHONY: all test test-% run
 
 SHELL = /bin/sh
 
@@ -106,3 +107,7 @@ clean:
 cleanclean: 
 	@echo "Removing entire build directory..."
 	rm -rf $(BUILDDIR)
+
+run:
+	@echo "Running executable..."
+	./$(TARGET)
