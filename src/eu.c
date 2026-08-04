@@ -21,6 +21,16 @@ typedef uint16_t (*AddressingTarget)(EU* eu, uint8_t idx, struct ImmedBuf* buf);
     
 static const AddressingTarget addressingMode[3] = {cpu_eu_memMode, cpu_eu_memModeB, cpu_eu_memModeW};
 
+static inline int16_t read_u8_as_s16(struct ImmedBuf* buf, uint8_t idx) {
+    return (int16_t) (int8_t) buf->byteArr[idx];
+}
+static inline int16_t read_s16(struct ImmedBuf* buf, uint8_t idx) {
+    return (int16_t) buf->byteArr[idx];
+}
+static inline uint16_t read_u16(struct ImmedBuf* buf, uint8_t idx) {
+    return (uint16_t) buf->byteArr[idx];
+}
+
 struct eu {
     DataRegister* dataReg;
     Alu* alu;
@@ -118,7 +128,7 @@ static uint16_t cpu_eu_memMode(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
             temp1 = cpu_eu_read16(eu, REG_DI);
             return temp1;
         case 0x06:
-            return (uint16_t) buf->byteArr[0];
+            return read_u16(buf, 0);
         case 0x07:
             temp1 = cpu_eu_read16(eu, REG_BX);
             return temp1;
@@ -131,38 +141,38 @@ static uint16_t cpu_eu_memModeB(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
         case 0x00:
             temp1 = cpu_eu_read16(eu, REG_BX);
             temp2 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x01:
             temp1 = cpu_eu_read16(eu, REG_BX);
             temp2 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x02:
             temp1 = cpu_eu_read16(eu, REG_BP);
             temp2 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x03:
             temp1 = cpu_eu_read16(eu, REG_BP);
             temp2 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x04:
             temp1 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp3;
         case 0x05:
             temp1 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp3;
         case 0x06:
             temp1 = cpu_eu_read16(eu, REG_BP);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp3;
         case 0x07:
             temp1 = cpu_eu_read16(eu, REG_BX);
-            temp3 =  (uint8_t) buf->byteArr[0];
+            temp3 =  read_u8_as_s16(buf, 0);
             return temp1 + temp3;
     }
     return 0x00;
@@ -173,38 +183,38 @@ static uint16_t cpu_eu_memModeW(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
         case 0x00:
             temp1 = cpu_eu_read16(eu, REG_BX);
             temp2 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x01:
             temp1 = cpu_eu_read16(eu, REG_BX);
             temp2 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x02:
             temp1 = cpu_eu_read16(eu, REG_BP);
             temp2 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x03:
             temp1 = cpu_eu_read16(eu, REG_BP);
             temp2 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp2 + temp3;
         case 0x04:
             temp1 = cpu_eu_read16(eu, REG_SI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp3;
         case 0x05:
             temp1 = cpu_eu_read16(eu, REG_DI);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp3;
         case 0x06:
             temp1 = cpu_eu_read16(eu, REG_BP);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp3;
         case 0x07:
             temp1 = cpu_eu_read16(eu, REG_BX);
-            temp3 =  (uint16_t) buf->byteArr[0];
+            temp3 =  read_s16(buf, 0);
             return temp1 + temp3;
     }
     return 0x00;

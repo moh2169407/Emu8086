@@ -34,23 +34,9 @@ int main(void) {
     cpu_eu_print_debugging(cpu->eu);
 
     cpu_exei(cpu);
-
-
-    // add 50
-
-    cpu_eu_print_debugging(cpu->eu);
-    // 0000 0100 0011 0010
-    // 0x0432
-
-    cpu_biu_enqueue_iq(cpu->biu, 0x04);
-    cpu_biu_enqueue_iq(cpu->biu, 0x32);
-    // cpu_eu_set_data_reg(cpu->eu, REG_AX, 04, REGISTER_WORD_ACCESS);
-    // cpu_eu_set_data_reg(cpu->eu, REG_BX, 32, REGISTER_WORD_ACCESS);
-    //
-    //
-    // cpu_exei(cpu);
-
+    
     cpu_eu_print_debugging(cpu->eu);
     cpu_free(cpu);
+    return 0;
 }
 

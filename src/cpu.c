@@ -216,10 +216,10 @@ static void source_modrn_operands(struct CpuContext* context, uint16_t* temp1, u
     }
     if (context->mod.mode == ADDRESSING_RM) {
         if (context->opcode->oprandWidth == REGISTER_WORD_ACCESS) {
-            *temp2 = cpu_eu_read16(context->cpu->eu, context->mod.reg);
+            *temp2 = cpu_eu_read16(context->cpu->eu, context->mod.regMem);
         }
         else {
-            *temp2 = cpu_eu_read8(context->cpu->eu, context->mod.reg);
+            *temp2 = cpu_eu_read8(context->cpu->eu, context->mod.regMem);
         }
     }
     else {
