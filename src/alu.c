@@ -1,6 +1,7 @@
 #include "alu.h"
 #include "bitset.h"
 #include "decoder.h"
+#include "register.h"
 #include "svec.h"
 
  
@@ -38,7 +39,7 @@ static AluOut alu_add(AluIn in) {
         uint16_t temp1 = *in.temp1;
         uint16_t temp2 = *in.temp2;
 
-        if (in.width == OPERAND_WORD_DATA) {
+        if (in.width == REGISTER_BYTE_ACCESS) {
             temp1 = (uint8_t) temp1;
             temp2 = (uint8_t) temp2;
         }

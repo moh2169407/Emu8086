@@ -21,15 +21,6 @@ typedef uint16_t (*AddressingTarget)(EU* eu, uint8_t idx, struct ImmedBuf* buf);
     
 static const AddressingTarget addressingMode[3] = {cpu_eu_memMode, cpu_eu_memModeB, cpu_eu_memModeW};
 
-static inline int16_t read_u8_as_s16(struct ImmedBuf* buf, uint8_t idx) {
-    return (int16_t) (int8_t) buf->byteArr[idx];
-}
-static inline int16_t read_s16(struct ImmedBuf* buf, uint8_t idx) {
-    return (int16_t) buf->byteArr[idx];
-}
-static inline uint16_t read_u16(struct ImmedBuf* buf, uint8_t idx) {
-    return (uint16_t) buf->byteArr[idx];
-}
 
 struct eu {
     DataRegister* dataReg;

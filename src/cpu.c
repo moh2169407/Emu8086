@@ -48,6 +48,7 @@ CPU* cpu_init(uint8_t min_mode) {
 
     cpu->intrLineStatus = 0;
     // cpu->io_line_status = 0;
+    cpu->segmentPrefixSet = FALSE;
 
     return cpu;
 }
@@ -99,7 +100,15 @@ void cpu_exei(CPU* cpu) {
     #endif
     
 
-            if (context.opcode->direction == DIRECTION_REG_DEST) {
+            if (context.opcode->hasImpliedOperand) {
+                if (context.opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+                    cpu_eu_write16(cpu->eu, context.opcode->impliedOperand, result);
+                }
+                else {
+                    cpu_eu_write8(cpu->eu, context.opcode->impliedOperand, result);
+                }
+            }
+            else if (context.opcode->direction == DIRECTION_REG_DEST) {
                 if (context.opcode->oprandWidth == REGISTER_WORD_ACCESS) {
                     cpu_eu_write16(cpu->eu, context.mod.reg, result);
                 }
@@ -140,7 +149,7 @@ void cpu_exei(CPU* cpu) {
             if (context.opcode->modrm) {
                 state = INSTR_MODRM;
             }
-            else {
+            if (!context.opcode->immed && !context.opcode->modrm) {
                 state = INSTR_EXEC;
             }
             if (!cpu->segmentPrefixSet) {
@@ -151,7 +160,7 @@ void cpu_exei(CPU* cpu) {
 
         if (state == INSTR_EXPECTING_BYTE) {
             assert(context.buf.byteIdx < 4 && context.buf.byteIdx + i < 4);
-            context.buf.byteArr[context.buf.byteIdx++] = byte;
+            context.buf.byteArr[context.buf.byteIdx++] = byte;;
             state = (--i) ? INSTR_EXPECTING_BYTE : INSTR_EXEC;
         }
 
@@ -231,15 +240,11 @@ static void source_modrn_operands(struct CpuContext* context, uint16_t* temp1, u
 
 static void source_immed_operands(struct CpuContext* context, uint16_t* temp1, uint16_t* temp2) {
     if (context->opcode->oprandWidth == REGISTER_WORD_ACCESS) {
-        *temp1 = cpu_eu_read16(context->cpu->eu, context->mod.reg);
+        *temp1 = cpu_eu_read16(context->cpu->eu, context->opcode->impliedOperand);
+        *temp2 = read_u16(&context->buf, context->buf.immedOffset);
     }
     else {
-        *temp1 = cpu_eu_read8(context->cpu->eu, context->mod.reg);
-    }
-    if (context->opcode->oprandWidth) {
-        *temp2 = (uint16_t) context->buf.byteArr[context->buf.immedOffset];
-    }
-    else {
-        *temp2 = (uint8_t) context->buf.byteArr[context->buf.immedOffset];
+        *temp1 = cpu_eu_read8(context->cpu->eu, context->opcode->impliedOperand);
+        *temp2 = read_u8(&context->buf, context->buf.immedOffset);
     }
 }

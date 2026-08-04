@@ -204,29 +204,27 @@ void registers_write_data_regs(DataRegister* regs, uint8_t idx, RegisterAccessTy
 
 
 void register_print_debugging_info(DataRegister* dReg) {
+    #ifdef PRINT_DEBUGGING
     fprintf(stdout, "------ AX=%d -------\n", dReg->registers[0]);
-    fprintf(stdout, "--- AL=0b%d%d%d%d --- AH=0b%d%d%d%d\n", BYTE_TO_BINARY_4(dReg->split[0]), BYTE_TO_BINARY_4(dReg->split[1]));
+    fprintf(stdout, "--- AL=0x%02X --- AH=0x%02X\n", dReg->split[0], dReg->split[1]);
 
 
     fprintf(stdout, "------ BX=%d -------\n", dReg->registers[1]);
-    fprintf(stdout, "--- BL=0b%d%d%d%d --- BH=0b%d%d%d%d\n", BYTE_TO_BINARY_4(dReg->split[2]), BYTE_TO_BINARY_4(dReg->split[3]));
+    fprintf(stdout, "--- BL=0x%02X --- BH=0x%02X\n", dReg->split[2], dReg->split[3]);
 
 
     fprintf(stdout, "------ CX=%d -------\n", dReg->registers[2]);
-    fprintf(stdout, "--- CL=0b%d%d%d%d --- CH=0b%d%d%d%d\n", BYTE_TO_BINARY_4(dReg->split[4]), BYTE_TO_BINARY_4(dReg->split[5]));
-
-
-    fprintf(stdout, "------ CX=%d -------\n", dReg->registers[2]);
-    fprintf(stdout, "--- CL=0b%d%d%d%d --- CH=0b%d%d%d%d\n", BYTE_TO_BINARY_4(dReg->split[4]), BYTE_TO_BINARY_4(dReg->split[5]));
+    fprintf(stdout, "--- CL=0x%02X --- CH=0x%02X\n", dReg->split[4], dReg->split[5]);
 
 
     fprintf(stdout, "------ DX=%d -------\n", dReg->registers[3]);
-    fprintf(stdout, "--- DL=0b%d%d%d%d --- DH=0b%d%d%d%d\n", BYTE_TO_BINARY_4(dReg->split[6]), BYTE_TO_BINARY_4(dReg->split[7]));
+    fprintf(stdout, "--- DL=0x%02X --- DH=0x%02X\n", dReg->split[6], dReg->split[7]);
 
 
     fprintf(stdout, "------ SP=%d -------\n", dReg->sp);
     fprintf(stdout, "------ BP=%d -------\n", dReg->bp);
     fprintf(stdout, "------ SI=%d -------\n", dReg->si);
     fprintf(stdout, "------ DI=%d -------\n", dReg->di);
+    #endif
 }
 

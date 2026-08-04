@@ -27,8 +27,8 @@ typedef struct segmentregister SegmentRegister;
 typedef struct dataregister DataRegister;
 
 typedef enum {
-    REGISTER_BYTE_ACCESS = 0,
-    REGISTER_WORD_ACCESS = 1,
+    REGISTER_BYTE_ACCESS = 1,
+    REGISTER_WORD_ACCESS = 2,
 } RegisterAccessType;
 
 // typedef enum {
@@ -66,7 +66,6 @@ extern void register_free_data_regs(DataRegister* segReg);
 uint16_t registers_read_data_regs(DataRegister* regs, uint8_t idx, RegisterAccessType access);
 
 void registers_write_data_regs(DataRegister* regs, uint8_t idx, RegisterAccessType access, void* data);
-
 
 void register_print_debugging_info(DataRegister* dReg);
 

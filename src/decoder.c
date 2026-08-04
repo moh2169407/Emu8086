@@ -56,7 +56,7 @@ static Opcode opMatrix[MATRIX_WIDTH_SIZE][MATRIX_LENGTH_SIZE] = {
         .immed = TRUE,
         .operation = ALU_ADD,
         .hasImpliedOperand = TRUE,
-        .impliedOperand = REG_AL,
+        .impliedOperand = REG_AX,
     }
 };
 

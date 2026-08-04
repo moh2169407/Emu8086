@@ -15,6 +15,19 @@ struct ImmedBuf {
 
     uint8_t immedOffset;
 };
+static inline uint8_t read_u8(struct ImmedBuf* buf, uint8_t idx) {
+    return (uint8_t) buf->byteArr[idx];
+}
+
+static inline int16_t read_u8_as_s16(struct ImmedBuf* buf, uint8_t idx) {
+    return (int16_t) (int8_t) buf->byteArr[idx];
+}
+static inline int16_t read_s16(struct ImmedBuf* buf, uint8_t idx) {
+    return (int16_t) buf->byteArr[idx];
+}
+static inline uint16_t read_u16(struct ImmedBuf* buf, uint8_t idx) {
+    return  (uint16_t) (buf->byteArr[idx] << 8) | (buf->byteArr[idx + 1]);
+}
 
 extern BIU* cpu_biu_init(void);
 
