@@ -14,7 +14,7 @@ typedef enum {
     INSTR_EXPECTING_BYTE,
     INSTR_MODRM,
     INSTR_EXEC,
-    INSTRU_FINISHED,
+    INSTR_FINISHED,
 } InstruState;
 
 // struct cpu {
@@ -35,19 +35,19 @@ struct CpuContext {
     Opcode* opcode;
 };
 
-static void set_instru_prefix_flags(uint8_t byte);
+void set_instru_prefix_flags(CPU*cpu, uint8_t byte);
 static void source_modrn_operands(struct CpuContext* context, uint16_t* temp1, uint16_t* temp2);
 static void source_immed_operands(struct CpuContext* context, uint16_t* temp1, uint16_t* temp2);
 
 CPU* cpu_init(uint8_t min_mode) {
     CPU* cpu = xmalloc(sizeof(*cpu));
-    cpu->min_mode = min_mode;
+    cpu->minMode = min_mode;
 
     cpu->biu = cpu_biu_init();
     cpu->eu = cpu_eu_init();
 
-    cpu->intr_line_status = 0;
-    cpu->io_line_status = 0;
+    cpu->intrLineStatus = 0;
+    // cpu->io_line_status = 0;
 
     return cpu;
 }
@@ -74,7 +74,6 @@ void cpu_exei(CPU* cpu) {
     uint16_t result;
 
     do {
-
         if (state == INSTR_EXEC) {
             if (context.opcode->modrm) {
                 source_modrn_operands(&context, &operand1, &operand2);
@@ -91,31 +90,45 @@ void cpu_exei(CPU* cpu) {
                 .width = context.opcode->oprandWidth,
                 .type = 0,
             };
-            printf("Operand1: %d\nOperands2: %d\n", operand1, operand2);
+
             result = cpu_eu_execute(cpu->eu, op);
+    #ifdef PRINT_DEBUGGING
+            printf("Operation: %s\n", context.opcode->mnemonic);
+            printf("Operand1: %d\nOperands2: %d\n", operand1, operand2);
             printf("RESULT: %d\n", result);
+    #endif
     
 
             if (context.opcode->direction == DIRECTION_REG_DEST) {
-                cpu_eu_set_data_reg(cpu->eu, context.mod.reg, result, REGISTER_WORD_ACCESS);
+                if (context.opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+                    cpu_eu_write16(cpu->eu, context.mod.reg, result);
+                }
+                else {
+                    cpu_eu_write8(cpu->eu, context.mod.reg, result);
+                }
             }
             else {
                 if (context.opcode->modrm && context.mod.mode != ADDRESSING_RM) {
                     // TODO 
                 }
                 else {
-                    cpu_eu_set_data_reg(cpu->eu, context.mod.regMem, result, REGISTER_WORD_ACCESS);
+                    if (context.opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+                        cpu_eu_write16(cpu->eu, context.mod.regMem, result);
+                    }
+                    else {
+                        cpu_eu_write8(cpu->eu, context.mod.regMem, result);
+                    }
                 }
             }
 
-            state = INSTRU_FINISHED;
+            state = INSTR_FINISHED;
             continue;
         }
 
         byte = cpu_biu_dequeue_iq(cpu->biu);
         if (state == INSTRU_DECODING_OPCODE) {
             if (cpu_eu_is_instru_prefix(byte)) {
-                set_instru_prefix_flags(byte);
+                set_instru_prefix_flags(cpu, byte);
                 continue;
             }
 
@@ -129,6 +142,9 @@ void cpu_exei(CPU* cpu) {
             }
             else {
                 state = INSTR_EXEC;
+            }
+            if (!cpu->segmentPrefixSet) {
+                cpu->segment = context.opcode->defaultSegment; 
             }
             continue; 
         }
@@ -156,24 +172,55 @@ void cpu_exei(CPU* cpu) {
             continue;
         }
 
-    } while (state != INSTRU_FINISHED);
+    } while (state != INSTR_FINISHED);
 }
 
-void set_instru_prefix_flags(uint8_t byte) {
-    byte = 0;
-    if (byte != 1) {
-        return;
+void set_instru_prefix_flags(CPU*cpu, uint8_t byte) {
+    switch (byte) {
+        case PREFIX_SEGEMENT_OVERRIDE_ES:
+            cpu->segment = ES; 
+            cpu->segmentPrefixSet = TRUE;
+        break;
+        case PREFIX_SEGMENT_OVERRIDE_CS:
+            cpu->segment = CS;
+            cpu->segmentPrefixSet = TRUE;
+        break;
+        case PREFIX_SEGMENT_OVERRIDE_DS:
+            cpu->segment = DS;
+            cpu->segmentPrefixSet = TRUE;
+        break;
+        case PREFIX_SEGMENT_OVERRIDE_SS:
+            cpu->segment = SS;
+            cpu->segmentPrefixSet = TRUE;
+        break;
+        case PREFIX_LOCK:
+            cpu->lockStatus = TRUE;
+        break;
+        case PREFIX_REPE:
+            cpu->repP = REP_EQ;
+        break;
+        case PREFIX_REPNE:
+            cpu->repP = REP_NEQ;
+        break;
     }
 }
 
-// TODO 
-// Need to change hardcoding word access
 static void source_modrn_operands(struct CpuContext* context, uint16_t* temp1, uint16_t* temp2) {
     uint32_t physicalAddress;
     uint16_t effectiveAddress;
-    *temp1 = cpu_eu_get_data_reg(context->cpu->eu, context->mod.reg, context->opcode->oprandWidth);
+    if (context->opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+        *temp1 = cpu_eu_read16(context->cpu->eu, context->mod.reg);
+    }
+    else {
+        *temp1 = cpu_eu_read8(context->cpu->eu, context->mod.reg);
+    }
     if (context->mod.mode == ADDRESSING_RM) {
-        *temp2 = cpu_eu_get_data_reg(context->cpu->eu, context->mod.regMem, context->opcode->oprandWidth);
+        if (context->opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+            *temp2 = cpu_eu_read16(context->cpu->eu, context->mod.reg);
+        }
+        else {
+            *temp2 = cpu_eu_read8(context->cpu->eu, context->mod.reg);
+        }
     }
     else {
         effectiveAddress = cpu_eu_calculate_effective_address(context->cpu->eu, context->mod.mode, context->mod.regMem, &context->buf);
@@ -183,8 +230,12 @@ static void source_modrn_operands(struct CpuContext* context, uint16_t* temp1, u
 }
 
 static void source_immed_operands(struct CpuContext* context, uint16_t* temp1, uint16_t* temp2) {
-    *temp1 = cpu_eu_get_data_reg(context->cpu->eu, context->opcode->impliedOperand, context->opcode->oprandWidth); 
-
+    if (context->opcode->oprandWidth == REGISTER_WORD_ACCESS) {
+        *temp1 = cpu_eu_read16(context->cpu->eu, context->mod.reg);
+    }
+    else {
+        *temp1 = cpu_eu_read8(context->cpu->eu, context->mod.reg);
+    }
     if (context->opcode->oprandWidth) {
         *temp2 = (uint16_t) context->buf.byteArr[context->buf.immedOffset];
     }

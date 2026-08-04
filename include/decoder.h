@@ -5,6 +5,15 @@
 #include "register.h"
 #include <stdint.h>
 
+#define PREFIX_SEGEMENT_OVERRIDE_ES 0x26
+#define PREFIX_SEGMENT_OVERRIDE_CS 0x2E
+#define PREFIX_SEGMENT_OVERRIDE_DS 0x3E
+#define PREFIX_SEGMENT_OVERRIDE_SS 0x36
+
+#define PREFIX_REPE 0xF3
+#define PREFIX_REPNE 0xF2
+#define PREFIX_LOCK 0xF0
+
 enum {
     DIRECTION_REG_SOURCE = 0,
     DIRECTION_REG_DEST,
@@ -28,6 +37,7 @@ typedef struct opcode {
     uint8_t hasImpliedOperand;
     uint8_t impliedOperand;
     AluOperator operation;
+    SegmentType defaultSegment;
 } Opcode;
 
 struct ModRM {
