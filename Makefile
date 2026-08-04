@@ -44,7 +44,7 @@ LIBTARGET = $(BINDIR)/lib8086.a
 ifeq ($(DEBUG), TRUE)
 	CFLAGS += -g -Wall -Wextra 
 	CFLAGS += -fsanitize=address
-	CFLAGS += -Werror -Wpedantic 
+	CFLAGS += -Werror -Wpedantic -DPRINT_DEBUGGING 
 	ifeq ($(shell echo | $(CC) -E -dM - | grep -c "__clang__"),0)
 	CFLAGS += -fanalyzer
 endif

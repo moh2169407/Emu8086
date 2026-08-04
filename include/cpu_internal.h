@@ -50,9 +50,13 @@ extern EU* cpu_eu_init(void);
 
 extern void cpu_eu_free(EU* eu);
 
-extern uint16_t cpu_eu_get_data_reg(EU* eu, uint8_t idx, uint8_t access);
+extern uint8_t cpu_eu_read8(EU* eu, uint8_t idx);
 
-extern void cpu_eu_set_data_reg(EU* eu, uint8_t idx, uint16_t data, uint8_t access);
+extern uint16_t cpu_eu_read16(EU* eu, uint8_t idx);
+
+extern void cpu_eu_write8(EU* eu, uint8_t idx, uint16_t data);
+
+extern void cpu_eu_write16(EU* eu, uint8_t idx, uint16_t data);
 
 extern Opcode* cpu_eu_decode_opcode(uint8_t opcode);
 

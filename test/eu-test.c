@@ -62,9 +62,9 @@ int testing_eu_register_ax_lower(void) {
     int expected = 0x64;
     EU* eu = cpu_eu_init();
 
-    cpu_eu_set_data_reg(eu, REG_AX, 0xA864, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_AX, 0xA864);
 
-    result = cpu_eu_get_data_reg(eu, REG_AL, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_AL);
 
     fprintf(stdout, "TESTING AX REGISTER LOWER Modes ");
 
@@ -84,9 +84,9 @@ int testing_eu_register_ax_uppper(void) {
     int expected = 0xA8;
     EU* eu = cpu_eu_init();
 
-    cpu_eu_set_data_reg(eu, REG_AX, 0xA864, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_AX, 0xA864);
 
-    result =  cpu_eu_get_data_reg(eu, REG_AH, REGISTER_BYTE_ACCESS);
+    result =  cpu_eu_read8(eu, REG_AH);
 
     fprintf(stdout, "TESTING AX REGISTER UPPER Modes ");
 
@@ -105,9 +105,9 @@ int testing_eu_register_ax(void) {
     int expected = 0xA864;
     EU* eu = cpu_eu_init();
 
-    cpu_eu_set_data_reg(eu, REG_AX, 0xA864, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_AX, 0xA864);
 
-    result = cpu_eu_get_data_reg(eu, REG_AX, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_AX);
 
     fprintf(stdout, "TESTING AX REGISTER ");
 
@@ -126,9 +126,9 @@ int testing_eu_register_bx_lower(void) {
     int expected = 0xF2;
     EU* eu = cpu_eu_init();
 
-    cpu_eu_set_data_reg(eu, REG_BX, 0xB9F2, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_BX, 0xB9F2);
 
-    result = cpu_eu_get_data_reg(eu, REG_BL, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_BL);
 
     fprintf(stdout, "TESTING AX REGISTER LOWER Modes ");
 
@@ -147,9 +147,9 @@ int testing_eu_register_bx_uppper(void) {
     int passed = 1;
     int expected = 0xB9;
     EU* eu = cpu_eu_init();
-    cpu_eu_set_data_reg(eu, REG_BX, 0xB9F2, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_BX, 0xB9F2);
 
-    result = cpu_eu_get_data_reg(eu, REG_BH, REGISTER_BYTE_ACCESS);
+    result = cpu_eu_read8(eu, REG_BH);
 
     fprintf(stdout, "TESTING BX REGISTER UPPER Modes ");
 
@@ -168,9 +168,9 @@ int testing_eu_register_bx(void) {
     int expected = 0xB9F2;
     EU* eu = cpu_eu_init(); 
 
-    cpu_eu_set_data_reg(eu, REG_BX, 0xB9F2, REGISTER_WORD_ACCESS);
+    cpu_eu_write16(eu, REG_BX, 0xB9F2);
 
-    result = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_BX);
 
     fprintf(stdout, "TESTING BX REGISTER ");
 
@@ -189,9 +189,10 @@ int testing_eu_register_cx_setting_lower(void) {
     int expected = 0x9F;
     EU* eu = cpu_eu_init(); 
 
-    cpu_eu_set_data_reg(eu, REG_CL, 0x9F, REGISTER_BYTE_ACCESS);
+    cpu_eu_write8(eu, REG_CL, 0x9F);
 
-    result = cpu_eu_get_data_reg(eu, REG_CX, REGISTER_WORD_ACCESS);
+
+    result = cpu_eu_read16(eu, REG_CX);
 
     fprintf(stdout, "TESTING CX REGISTER SETTING LOWER ");
 
@@ -210,9 +211,9 @@ int testing_eu_register_cx_setting_upper(void) {
     int expected = 0x5A00;
     EU* eu = cpu_eu_init(); 
 
-    cpu_eu_set_data_reg(eu, REG_CH, 0x5A, REGISTER_BYTE_ACCESS);
+    cpu_eu_write8(eu, REG_CH, 0x5A);
 
-    result = cpu_eu_get_data_reg(eu, REG_CX, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_CX);
 
     fprintf(stdout, "TESTING CX REGISTER SETTING UPPER ");
 
@@ -231,10 +232,10 @@ int testing_eu_register_cx(void) {
     int expected = 0x5A9F;
     EU* eu = cpu_eu_init(); 
 
-    cpu_eu_set_data_reg(eu, REG_CL, 0x9F, REGISTER_BYTE_ACCESS);
-    cpu_eu_set_data_reg(eu, REG_CH, 0x5A, REGISTER_BYTE_ACCESS);
+    cpu_eu_write8(eu, REG_CL, 0x9F);
+    cpu_eu_write8(eu, REG_CH, 0x5A);
 
-    result = cpu_eu_get_data_reg(eu, REG_CX, REGISTER_WORD_ACCESS);
+    result = cpu_eu_read16(eu, REG_CX);
 
     fprintf(stdout, "TESTING CX REGISTER ");
 

@@ -12,16 +12,24 @@ enum {
     CPU_MAXIMUM_MODE,
 };
 
+typedef enum {
+    REP_NONE = 0,
+    REP_EQ,
+    REP_NEQ,
+} RepeartPrefix;
 
 struct cpu {
     EU* eu;
     BIU* biu;
 
-    uint8_t intr_line_status;
-    uint8_t min_mode;
-    uint8_t io_line_status; 
+    uint8_t intrLineStatus;
+    uint8_t minMode;
+
+    RepeartPrefix repP;
+    uint8_t lockStatus;
 
     SegmentType segment;
+    uint8_t segmentPrefixSet;
 };
 
 CPU* cpu_init(uint8_t min_mode);

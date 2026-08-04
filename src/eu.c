@@ -19,7 +19,7 @@ static uint16_t cpu_eu_memModeW(EU* eu, uint8_t idx, struct ImmedBuf* buf);
 
 typedef uint16_t (*AddressingTarget)(EU* eu, uint8_t idx, struct ImmedBuf* buf);
     
-AddressingTarget addressingMode[3] = {cpu_eu_memMode, cpu_eu_memModeB, cpu_eu_memModeW};
+static const AddressingTarget addressingMode[3] = {cpu_eu_memMode, cpu_eu_memModeB, cpu_eu_memModeW};
 
 struct eu {
     DataRegister* dataReg;
@@ -31,6 +31,7 @@ EU* cpu_eu_init(void) {
     EU* eu = xmalloc(sizeof(*eu));
     eu->dataReg = register_init_data_regs();    
     eu->alu = alu_init();
+    eu->flags = bitset_init_bset(1);
    
     return eu;
 }
@@ -38,16 +39,25 @@ EU* cpu_eu_init(void) {
 void cpu_eu_free(EU* eu) {
     assert(eu != NULL);
     register_free_data_regs(eu->dataReg);
+    alu_free(eu->alu);
+    bitset_free_bset(eu->flags);
+
     free(eu);
 }
 
-
-uint16_t cpu_eu_get_data_reg(EU* eu, uint8_t idx, uint8_t access) {
-    return registers_read_data_regs(eu->dataReg, idx, access);
+uint8_t cpu_eu_read8(EU* eu, uint8_t idx) {
+    return registers_read_data_regs(eu->dataReg, idx, REGISTER_BYTE_ACCESS);
+}
+extern uint16_t cpu_eu_read16(EU* eu, uint8_t idx) {
+    return registers_read_data_regs(eu->dataReg, idx, REGISTER_WORD_ACCESS);
 }
 
-void cpu_eu_set_data_reg(EU* eu, uint8_t idx, uint16_t data, uint8_t access) {
-    registers_write_data_regs(eu->dataReg, idx, access, (void*) &data);
+void cpu_eu_write8(EU* eu, uint8_t idx, uint16_t data) {
+    registers_write_data_regs(eu->dataReg, idx, REGISTER_BYTE_ACCESS, &data);
+}
+
+extern void cpu_eu_write16(EU* eu, uint8_t idx, uint16_t data) {
+    registers_write_data_regs(eu->dataReg, idx, REGISTER_WORD_ACCESS, &data);
 }
 
 Opcode* cpu_eu_decode_opcode(uint8_t opcode) {
@@ -64,13 +74,13 @@ struct ModRM cpu_eu_decode_modrm(uint8_t byte) {
 
 uint8_t cpu_eu_is_instru_prefix(uint8_t byte) {
     switch (byte) {
-        case 0xF3:
-        case 0xF2:
-        case 0x2E:
-        case 0x3E:
-        case 0x36:
-        case 0x26:
-        case 0xF0:
+        case PREFIX_REPE:
+        case PREFIX_REPNE:
+        case PREFIX_SEGMENT_OVERRIDE_CS:
+        case PREFIX_SEGMENT_OVERRIDE_DS:
+        case PREFIX_SEGMENT_OVERRIDE_SS:
+        case PREFIX_SEGEMENT_OVERRIDE_ES:
+        case PREFIX_LOCK:;
             return TRUE;
         break;
     }
@@ -86,31 +96,31 @@ static uint16_t cpu_eu_memMode(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
     uint16_t temp1, temp2;
     switch (idx) {
         case 0x00:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             return temp1 + temp2;
         case 0x01:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             return temp1 + temp2;
         case 0x02:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             return temp1 + temp2;
         case 0x03:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             return temp1 + temp2;
         case 0x04:
-            temp1 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_SI);
             return temp1;
         case 0x05:
-            temp1 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_DI);
             return temp1;
         case 0x06:
-            return (int16_t) buf->byteArr[0];
+            return (uint16_t) buf->byteArr[0];
         case 0x07:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
             return temp1;
     }
     return 0x00;
@@ -119,39 +129,39 @@ static uint16_t cpu_eu_memModeB(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
     uint16_t temp1, temp2, temp3;
     switch (idx) {
         case 0x00:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x01:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x02:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x03:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x04:
-            temp1 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x05:
-            temp1 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x06:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x07:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
             temp3 =  (uint8_t) buf->byteArr[0];
             return temp1 + temp3;
     }
@@ -161,39 +171,39 @@ static uint16_t cpu_eu_memModeW(EU* eu, uint8_t idx, struct ImmedBuf* buf) {
     uint16_t temp1, temp2, temp3;
     switch (idx) {
         case 0x00:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x01:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x02:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x03:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
-            temp2 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
+            temp2 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp2 + temp3;
         case 0x04:
-            temp1 = cpu_eu_get_data_reg(eu, REG_SI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_SI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x05:
-            temp1 = cpu_eu_get_data_reg(eu, REG_DI, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_DI);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x06:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BP, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BP);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp3;
         case 0x07:
-            temp1 = cpu_eu_get_data_reg(eu, REG_BX, REGISTER_WORD_ACCESS);
+            temp1 = cpu_eu_read16(eu, REG_BX);
             temp3 =  (uint16_t) buf->byteArr[0];
             return temp1 + temp3;
     }
