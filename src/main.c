@@ -93,6 +93,7 @@ int main(void) {
     // 0000 0100 0000 0101
     // 0x0405
 
+
     cpu_biu_enqueue_iq(cpu->biu, 0x05);
     cpu_biu_enqueue_iq(cpu->biu, 0x05);
     cpu_biu_enqueue_iq(cpu->biu, 0x05);

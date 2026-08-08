@@ -4,8 +4,8 @@
 
 #include <svec.h>
 
-#define MATRIX_WIDTH_SIZE (0x0F)
-#define MATRIX_LENGTH_SIZE (0x0F)
+#define MATRIX_WIDTH_SIZE (0x10)
+#define MATRIX_LENGTH_SIZE (0x10)
 
 #define MASK_TOP_NIBBLE(byte) (byte & 0xF0) >> 4
 #define MASK_BOTTOM_NIBBLE(byte) (byte & 0x0F)
